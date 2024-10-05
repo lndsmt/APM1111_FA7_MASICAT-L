@@ -1,0 +1,111 @@
+---
+title: "FORMATIVE ASSESSMENT 7"
+author: "Lindsy Rossel C. Masicat"
+date: "2024-10-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(kableExtra)
+
+```
+
+## Introduction 
+
+This report analyzes the mischievous activities of two groups: those with and without an invisibility cloak. We'll utilize an independent samples t-test to see if the cloak has no effect on mischievous conduct.
+
+## Data
+
+The data set includes 24 participants, 12 in each group (with and without a cloak). Each participant's number of mischief is measured.
+
+## Data Table
+
+```{r data table}
+
+participant <- 1:24
+cloak <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
+mischief <- c(3, 1, 5, 4, 6, 4, 6, 2, 0, 5, 4, 5, 4, 3, 6, 6, 8, 5, 5, 4, 2, 5, 7, 5)
+
+data <- data.frame(
+  Participant = participant, 
+  Cloak = factor(cloak, levels = c(0, 1), labels = c("0", "1")), 
+  Mischief = mischief
+)
+
+
+kable(data, caption = "Invisibility Cloak Data", align = 'c') %>%
+  kable_styling(full_width = TRUE)
+
+```
+
+#### Assumption 1: Dependent variable is continuous
+
+The dependent variable, Mischief, indicates the number of mischievous activities committed by participants can be considered continuous.
+
+#### Assumption 2: Independent variable consists of two groups
+
+The independent variable, Cloak, has two levels: individuals who with cloaks and those without cloaks. There are no repeated participants in the groups.
+
+#### Assumption 3: Independence of observations
+Each participant is present in only one group, ensuring the independence of observations.
+
+#### Assumption 4: Checking for outliers
+We use a boxplot to visually inspect for outliers.
+
+```{r boxplot}
+library(ggplot2)
+ggplot(data, aes(x = Cloak, y = Mischief)) + 
+  geom_boxplot() + 
+  geom_jitter(width = 0.1, height = 0, color = 'blue') +
+  labs(title = "Mischief by Cloak Group", x = "Cloak", y = "Number of Mischievous Acts")
+```
+
+#### Assumption 5: Normality
+We use the Shapiro-Wilk test to assess whether Mischief is normally distributed in each group.
+
+```{r shapiro}
+
+shapiro_without_cloak <- shapiro.test(data$Mischief[data$Cloak == "0"])
+shapiro_with_cloak <- shapiro.test(data$Mischief[data$Cloak == "1"])
+
+
+shapiro_results <- data.frame(
+  Group = c("Without Cloak", "With Cloak"),
+  W = c(shapiro_without_cloak$statistic, shapiro_with_cloak$statistic),
+  p_value = c(shapiro_without_cloak$p.value, shapiro_with_cloak$p.value)
+)
+
+
+kable(shapiro_results, caption = "Shapiro-Wilk Normality Test Results", align = 'c') %>%
+  kable_styling(full_width = TRUE)
+```
+
+#### Computation
+Independent Samples T-Test
+
+```{r comp}
+t_test <- t.test(Mischief ~ Cloak, data = data, var.equal = TRUE)
+
+
+results <- data.frame(
+  Variable = "Mischief",
+  Statistic = round(t_test$statistic, 3),
+  Parameter = t_test$parameter,
+  p_value = round(t_test$p.value, 3),
+  Confidence_Interval = paste0("[", round(t_test$conf.int[1], 3), ", ", round(t_test$conf.int[2], 3), "]"),
+  Mean_Difference = round(t_test$estimate[1] - t_test$estimate[2], 3)
+)
+
+kable(results, caption = "Results of the T-Test for Mischief")
+
+```
+
+### Analysis
+
+The independent samples t-test was used to examine the number of mischievous acts performed by subjects wearing versus not wearing a cloak of invisibility. The findings revealed that there was no significant difference between the two groups (t(22) = -1.71, p = 0.101), with a mean difference of -1.25 (95% CI: -2.76, 0.26).
+
+Thus, we fail to reject the null hypothesis and conclude that the cloak has no significant effect on the number of mischief.
+
